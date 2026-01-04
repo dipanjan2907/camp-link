@@ -5,7 +5,11 @@ import React from "react";
 
 const Page = () => {
   const router = useRouter();
-  router.push("/login");
+
+  React.useEffect(() => {
+    router.push("/login");
+  }, [router]);
+
   return <div></div>;
 };
 

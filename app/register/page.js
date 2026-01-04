@@ -5,11 +5,18 @@ import Link from "next/link";
 import {
   getAuth,
   createUserWithEmailAndPassword,
-  setPersistence,
-  browserSessionPersistence,
+  signOut,
 } from "firebase/auth";
+import { initializeApp, deleteApp } from "firebase/app";
 import { app, db } from "../../lib/firebase";
-import { User, Mail, Lock, ArrowRight, AlertCircle } from "lucide-react";
+import {
+  User,
+  Mail,
+  Lock,
+  ArrowRight,
+  AlertCircle,
+  CheckCircle,
+} from "lucide-react";
 import SignInWithGoogle from "../SignInWithGoogle";
 import { doc, setDoc, getDoc } from "firebase/firestore";
 import Logo from "../logo";
@@ -19,6 +26,7 @@ const RegisterPage = () => {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
   const [btnText, setbtnText] = useState("Register");
   const router = useRouter();
   const auth = getAuth(app);
@@ -64,22 +72,53 @@ const RegisterPage = () => {
       return;
     }
 
+    let secondaryApp = null;
     try {
       setbtnText("Registering...");
       setError("");
-      await setPersistence(auth, browserSessionPersistence); // Enable tab-specific session
-      await createUserWithEmailAndPassword(auth, email, password);
-      const user = auth.currentUser;
-      if (user) {
-        await setDoc(doc(db, "users", user.uid), {
+      setSuccess("");
+
+      // Create a secondary app instance to create user without logging out the admin
+      const config = app.options;
+      const secondaryAppName = `SecondaryApp-${Date.now()}`;
+      secondaryApp = initializeApp(config, secondaryAppName);
+      const secondaryAuth = getAuth(secondaryApp);
+
+      const userCredential = await createUserWithEmailAndPassword(
+        secondaryAuth,
+        email,
+        password
+      );
+      const newUser = userCredential.user;
+
+      if (newUser) {
+        await setDoc(doc(db, "users", newUser.uid), {
           fname: fname,
-          email: user.email,
+          email: newUser.email,
           role: "student",
+          photo: "",
+          createdAt: new Date().toISOString(),
         });
       }
-      router.push("/login");
+
+      await signOut(secondaryAuth);
+
+      setSuccess("Student registered successfully!");
+      setFname("");
+      setEmail("");
+      setPassword("");
+      setConfirmPassword("");
     } catch (err) {
       setError(err.message.replace("Firebase: ", ""));
+    } finally {
+      setbtnText("Register");
+      if (secondaryApp) {
+        try {
+          await deleteApp(secondaryApp);
+        } catch (e) {
+          console.error("Error deleting secondary app:", e);
+        }
+      }
     }
   };
 
@@ -176,6 +215,12 @@ const RegisterPage = () => {
                 <span>{error}</span>
               </div>
             )}
+            {success && (
+              <div className="flex items-center gap-2 p-3 text-sm text-green-400 bg-green-950/30 border border-green-900/50 rounded-lg">
+                <CheckCircle className="h-4 w-4" />
+                <span>{success}</span>
+              </div>
+            )}
 
             <button
               type="submit"
@@ -194,7 +239,6 @@ const RegisterPage = () => {
               Back to Dashboard
             </button>
           </div>
-          {/* Removed Google Sign In as this is an admin-only manual creation form now */}
         </div>
       </div>
     </>
