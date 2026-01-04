@@ -228,7 +228,7 @@ const StudentNoticePage = () => {
                         "Student"}
                     </p>
                     <p className="text-xs text-amber-500 font-medium">
-                      {userData?.branch || "General"}
+                      {userData?.branch || "{Unknown Branch}"}
                     </p>
                   </div>
                   <div className="w-9 h-9 rounded-full bg-slate-800 flex items-center justify-center border border-slate-700 overflow-hidden">

@@ -11,6 +11,7 @@ import { initializeApp, deleteApp } from "firebase/app";
 import { app, db } from "../../lib/firebase";
 import {
   User,
+  GraduationCap,
   Mail,
   Lock,
   ArrowRight,
@@ -20,11 +21,13 @@ import {
 import SignInWithGoogle from "../SignInWithGoogle";
 import { doc, setDoc, getDoc } from "firebase/firestore";
 import Logo from "../logo";
+import { set } from "date-fns";
 const RegisterPage = () => {
   const [fname, setFname] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [branch, setBranch] = useState("");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [btnText, setbtnText] = useState("Register");
@@ -95,6 +98,7 @@ const RegisterPage = () => {
         await setDoc(doc(db, "users", newUser.uid), {
           fname: fname,
           email: newUser.email,
+          branch: branch,
           role: "student",
           photo: "",
           createdAt: new Date().toISOString(),
@@ -108,6 +112,7 @@ const RegisterPage = () => {
       setEmail("");
       setPassword("");
       setConfirmPassword("");
+      setBranch("");
     } catch (err) {
       setError(err.message.replace("Firebase: ", ""));
     } finally {
@@ -151,6 +156,28 @@ const RegisterPage = () => {
                   onChange={(e) => setFname(e.target.value)}
                   className="w-full pl-10 pr-4 py-3 bg-slate-950/50 border border-slate-800 rounded-xl text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent transition-all"
                   placeholder="Full Name"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-1">
+              <label
+                htmlFor="branch"
+                className="text-sm font-medium text-slate-300 ml-1"
+              >
+                Branch
+              </label>
+              <div className="relative group">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <GraduationCap className="h-5 w-5 text-slate-500 group-focus-within:text-blue-400 transition-colors" />
+                </div>
+                <input
+                  type="text"
+                  id="branch"
+                  value={branch}
+                  onChange={(e) => setBranch(e.target.value)}
+                  className="w-full pl-10 pr-4 py-3 bg-slate-950/50 border border-slate-800 rounded-xl text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent transition-all"
+                  placeholder="Branch"
                 />
               </div>
             </div>

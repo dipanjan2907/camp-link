@@ -30,7 +30,7 @@ import {
   CheckCircle,
   Loader2,
   Zap,
-  Megaphone, // Added Megaphone
+  Megaphone,
 } from "lucide-react";
 
 const StudentDashboard = () => {
@@ -369,7 +369,7 @@ const StudentDashboard = () => {
                         "Student"}
                     </p>
                     <p className="text-xs text-amber-400 font-medium">
-                      {userData?.branch || "Engineering"}
+                      {userData?.branch || "{Unknown Branch}"}
                     </p>
                   </div>
                   <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-500 to-orange-600 p-[2px]">
