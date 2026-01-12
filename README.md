@@ -1,6 +1,7 @@
 # Campus Link
 
-Campus Link is a comprehensive university event and notice management platform designed to bridge the gap between student organizers and participants. It provides a seamless interface for administrators to manage events and approvals, and for students to explore, register, and volunteer for campus activities.
+Campus Link is a comprehensive university event and notice management platform designed to bridge the gap between student organizers and participants. It provides a seamless interface for administrators to manage events and approvals, and for students to explore, register, and volunteer for campus activities. 
+Demo: https://youtu.be/WnBSSv9bBmA?si=BBhrSPxwoR4oo2Ic
 
 ## 🚀 Key Features
 
