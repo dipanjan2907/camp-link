@@ -132,19 +132,22 @@ const StudentDashboard = () => {
       const eventsList = snapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
-        date: doc.data().date?.toDate
-          ? doc.data().date.toDate()
-          : new Date(doc.data().date),
+        startDate: doc.data().startDate?.toDate
+          ? doc.data().startDate.toDate()
+          : new Date(doc.data().startDate || doc.data().date),
+        endDate: doc.data().endDate?.toDate
+          ? doc.data().endDate.toDate()
+          : new Date(doc.data().endDate || doc.data().date),
       }));
 
       // Sort: Upcoming (Ascending) then Expired (Descending)
       const now = new Date();
       const upcoming = eventsList
-        .filter((e) => e.date >= now)
-        .sort((a, b) => a.date - b.date);
+        .filter((e) => e.endDate >= now)
+        .sort((a, b) => a.startDate - b.startDate);
       const expired = eventsList
-        .filter((e) => e.date < now)
-        .sort((a, b) => b.date - a.date);
+        .filter((e) => e.endDate < now)
+        .sort((a, b) => b.endDate - a.endDate);
 
       setEvents([...upcoming, ...expired]);
     });
@@ -152,7 +155,7 @@ const StudentDashboard = () => {
     // 2. Registrations Listener
     const regQuery = query(
       collection(db, "event_registrations"),
-      where("userId", "==", user.uid)
+      where("userId", "==", user.uid),
     );
     const regUnsub = onSnapshot(regQuery, (snapshot) => {
       const regSet = new Set(snapshot.docs.map((doc) => doc.data().eventId));
@@ -162,7 +165,7 @@ const StudentDashboard = () => {
     // 3. Volunteer Applications Listener
     const volQuery = query(
       collection(db, "volunteer_applications"),
-      where("userId", "==", user.uid)
+      where("userId", "==", user.uid),
     );
     const volUnsub = onSnapshot(volQuery, (snapshot) => {
       const volMap = {};
@@ -253,14 +256,14 @@ const StudentDashboard = () => {
   };
 
   const addToGoogleCalendar = (event) => {
-    const startTime = event.date.toISOString().replace(/-|:|\.\d\d\d/g, "");
-    const endTime = new Date(event.date.getTime() + 2 * 60 * 60 * 1000)
+    const startTime = event.startDate
       .toISOString()
       .replace(/-|:|\.\d\d\d/g, "");
+    const endTime = event.endDate.toISOString().replace(/-|:|\.\d\d\d/g, "");
     const url = `https://www.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(
-      event.title
+      event.title,
     )}&dates=${startTime}/${endTime}&details=${encodeURIComponent(
-      event.description
+      event.description,
     )}&location=${encodeURIComponent(event.venue)}`;
     window.open(url, "_blank");
   };
@@ -271,7 +274,7 @@ const StudentDashboard = () => {
   };
 
   const filteredEvents = events.filter((event) => {
-    if (filters.showOnlyUpcoming && new Date() > event.date) return false;
+    if (filters.showOnlyUpcoming && new Date() > event.endDate) return false;
     if (filters.category && event.category !== filters.category) return false;
     if (filters.venue && event.venue !== filters.venue) return false;
     if (
@@ -290,7 +293,7 @@ const StudentDashboard = () => {
   });
 
   const volunteerEvents = events.filter(
-    (e) => e.enableVolunteers && new Date(e.date) > new Date()
+    (e) => e.enableVolunteers && new Date(e.endDate) > new Date(),
   );
 
   if (loading) {
@@ -439,8 +442,8 @@ const StudentDashboard = () => {
                     filters.showOnlyUpcoming
                       ? "border-amber-500/50 bg-amber-500/10"
                       : darkMode
-                      ? "border-slate-700 bg-slate-800/50"
-                      : "border-slate-200 bg-slate-50"
+                        ? "border-slate-700 bg-slate-800/50"
+                        : "border-slate-200 bg-slate-50"
                   }`}
                 >
                   <span
@@ -588,8 +591,8 @@ const StudentDashboard = () => {
                           filters.semesters.includes(sem)
                             ? "bg-amber-500 border-amber-500 text-white shadow-lg shadow-amber-500/25"
                             : darkMode
-                            ? "bg-slate-800 border-slate-700 hover:border-amber-500 text-slate-400"
-                            : "bg-slate-100 border-slate-200 hover:bg-slate-200 text-slate-600"
+                              ? "bg-slate-800 border-slate-700 hover:border-amber-500 text-slate-400"
+                              : "bg-slate-100 border-slate-200 hover:bg-slate-200 text-slate-600"
                         }`}
                       >
                         {sem}
@@ -637,7 +640,7 @@ const StudentDashboard = () => {
                   </div>
                 ) : (
                   filteredEvents.map((event) => {
-                    const isExpired = new Date() > event.date;
+                    const isExpired = new Date() > event.endDate;
                     return (
                       <div
                         key={event.id}
@@ -695,13 +698,28 @@ const StudentDashboard = () => {
                                 <div className="flex flex-wrap gap-4 text-sm font-medium text-slate-500 mb-6">
                                   <div className="flex items-center gap-2">
                                     <Calendar className="w-4 h-4 text-amber-500" />
-                                    {event.date.toLocaleDateString(undefined, {
-                                      weekday: "short",
-                                      month: "short",
-                                      day: "numeric",
-                                      hour: "2-digit",
-                                      minute: "2-digit",
-                                    })}
+                                    {event.startDate.toLocaleDateString(
+                                      undefined,
+                                      {
+                                        weekday: "short",
+                                        year: "numeric",
+                                        month: "short",
+                                        day: "numeric",
+                                        hour: "2-digit",
+                                        minute: "2-digit",
+                                      },
+                                    )}
+                                    <span className="text-slate-600">-</span>
+                                    {event.endDate.toLocaleDateString(
+                                      undefined,
+                                      {
+                                        year: "numeric",
+                                        month: "short",
+                                        day: "numeric",
+                                        hour: "2-digit",
+                                        minute: "2-digit",
+                                      },
+                                    )}
                                   </div>
                                   <div className="flex items-center gap-2">
                                     <MapPin className="w-4 h-4 text-amber-500" />
@@ -788,7 +806,8 @@ const StudentDashboard = () => {
                             {event.title}
                           </h4>
                           <span className="text-xs font-mono text-rose-400 bg-rose-500/10 px-2 py-1 rounded border border-rose-500/20">
-                            {event.date.toLocaleDateString()}
+                            {event.startDate.toLocaleDateString()} -{" "}
+                            {event.endDate.toLocaleDateString()}
                           </span>
                         </div>
 
@@ -809,10 +828,10 @@ const StudentDashboard = () => {
                                   const apps = volunteerApps[event.id] || {};
                                   const status = apps[role];
                                   const hasActiveApp = Object.values(apps).some(
-                                    (s) => s === "pending" || s === "approved"
+                                    (s) => s === "pending" || s === "approved",
                                   );
                                   const isRegistered = registrations.has(
-                                    event.id
+                                    event.id,
                                   );
 
                                   if (status) {
@@ -823,8 +842,8 @@ const StudentDashboard = () => {
                                         status === "approved"
                                           ? "bg-green-500 text-white shadow-lg shadow-green-500/20"
                                           : status === "rejected"
-                                          ? "bg-red-500 text-white"
-                                          : "bg-yellow-500 text-black"
+                                            ? "bg-red-500 text-white"
+                                            : "bg-yellow-500 text-black"
                                       }`}
                                       >
                                         {status}

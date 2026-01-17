@@ -38,7 +38,7 @@ const getRoleStyle = (role) => {
   return ROLE_COLORS[key];
 };
 
-const VolunteerApprovalCard = ({ eventId }) => {
+const VolunteerApprovalCard = ({ eventId, enableVolunteers }) => {
   const [requests, setRequests] = useState([]);
   const [approved, setApproved] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -58,7 +58,7 @@ const VolunteerApprovalCard = ({ eventId }) => {
     // 2. Query Setup
     const q = query(
       collection(db, "volunteer_applications"),
-      where("eventId", "==", eventId)
+      where("eventId", "==", eventId),
     );
 
     // 3. Real-time Listener
@@ -71,14 +71,14 @@ const VolunteerApprovalCard = ({ eventId }) => {
         }));
 
         const pendingData = allData.filter(
-          (req) => req.status?.toLowerCase() === "pending"
+          (req) => req.status?.toLowerCase() === "pending",
         );
         const approvedData = allData.filter(
-          (req) => req.status?.toLowerCase() === "approved"
+          (req) => req.status?.toLowerCase() === "approved",
         );
 
         console.log(
-          `Snapshot update: ${pendingData.length} pending, ${approvedData.length} approved`
+          `Snapshot update: ${pendingData.length} pending, ${approvedData.length} approved`,
         );
         setRequests(pendingData);
         setApproved(approvedData);
@@ -88,7 +88,7 @@ const VolunteerApprovalCard = ({ eventId }) => {
         console.error("Error listening to volunteer requests:", err);
         setError("Failed to stream volunteer requests.");
         setLoading(false);
-      }
+      },
     );
 
     return () => unsubscribe();
@@ -102,8 +102,6 @@ const VolunteerApprovalCard = ({ eventId }) => {
         status: status,
         reviewedAt: serverTimestamp(),
       });
-      // No need to manually update state here; onSnapshot will trigger
-      // when the database update completes.
     } catch (err) {
       console.error(`Error updating status to ${status}:`, err);
       alert("Something went wrong. Please try again.");
@@ -150,8 +148,18 @@ const VolunteerApprovalCard = ({ eventId }) => {
       {requests.length === 0 ? (
         <div className="flex flex-col items-center justify-center h-48 bg-gray-900/50 border border-gray-800 rounded-2xl text-gray-500">
           <User className="w-10 h-10 mb-3 opacity-20" />
-          <p>No pending volunteer requests</p>
-          <p className="text-xs text-gray-600 mt-2">ID: {eventId}</p>
+          {enableVolunteers ? (
+            <>
+              <p>No pending volunteer requests</p>
+              <p className="text-xs text-gray-600 mt-2">ID: {eventId}</p>
+            </>
+          ) : (
+            <div className="flex flex-col items-center text-center">
+              <p className="font-medium text-slate-400">
+                Volunteer registrations were disabled during event creation.
+              </p>
+            </div>
+          )}
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -190,7 +198,7 @@ const VolunteerApprovalCard = ({ eventId }) => {
                 </div>
                 <span
                   className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium border ${getRoleStyle(
-                    request.role
+                    request.role,
                   )}`}
                 >
                   {request.role || "General Volunteer"}

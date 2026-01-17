@@ -26,22 +26,41 @@ const Page = () => {
   useEffect(() => {
     const eventsCol = collection(db, "events");
     const unsubscribe = onSnapshot(eventsCol, (snapshot) => {
-      const eventsList = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-        date: doc.data().date?.toDate
-          ? doc.data().date.toDate()
-          : new Date(doc.data().date),
-      }));
+      const eventsList = snapshot.docs.map((doc) => {
+        const data = doc.data();
+        const parsedStartDate = data.startDate?.toDate
+          ? data.startDate.toDate()
+          : new Date(data.startDate || data.date);
+        const parsedEndDate = data.endDate?.toDate
+          ? data.endDate.toDate()
+          : new Date(data.endDate || data.date);
+
+        console.log(`Event: ${data.title}, ID: ${doc.id}`);
+        console.log(
+          `  Raw Start:`,
+          data.startDate,
+          `Parsed Start:`,
+          parsedStartDate,
+        );
+        console.log(`  Raw End:`, data.endDate, `Parsed End:`, parsedEndDate);
+        console.log(`  Is Expired Check:`, parsedEndDate < new Date());
+
+        return {
+          id: doc.id,
+          ...data,
+          startDate: parsedStartDate,
+          endDate: parsedEndDate,
+        };
+      });
 
       // Sort: Upcoming (Ascending) then Expired (Descending)
       const now = new Date();
       const upcoming = eventsList
-        .filter((e) => e.date >= now)
-        .sort((a, b) => a.date - b.date);
+        .filter((e) => e.endDate >= now)
+        .sort((a, b) => a.startDate - b.startDate);
       const expired = eventsList
-        .filter((e) => e.date < now)
-        .sort((a, b) => b.date - a.date);
+        .filter((e) => e.endDate < now)
+        .sort((a, b) => b.endDate - a.endDate);
 
       setEvents([...upcoming, ...expired]);
     });
@@ -196,7 +215,7 @@ const Page = () => {
             <p className="text-gray-500 italic">No events found.</p>
           ) : (
             events.map((event) => {
-              const isExpired = new Date() > event.date;
+              const isExpired = new Date() > event.endDate;
               return (
                 <div
                   key={event.id}
@@ -233,8 +252,16 @@ const Page = () => {
                           >
                             📅
                           </span>
-                          {event.date.toLocaleString([], {
+                          {event.startDate.toLocaleString([], {
                             weekday: "short",
+                            year: "numeric",
+                            month: "short",
+                            day: "numeric",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                          {" - "}
+                          {event.endDate.toLocaleString([], {
                             year: "numeric",
                             month: "short",
                             day: "numeric",
@@ -251,7 +278,10 @@ const Page = () => {
                         <Trash2 className="w-5 h-5" />
                       </button>
                     </div>
-                    <VolunteerApprovalCard eventId={event.id} />
+                    <VolunteerApprovalCard
+                      eventId={event.id}
+                      enableVolunteers={event.enableVolunteers}
+                    />
                   </div>
                 </div>
               );

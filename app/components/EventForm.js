@@ -22,7 +22,8 @@ const EventForm = ({ onEventPublished }) => {
   const [formData, setFormData] = useState({
     title: "",
     description: "",
-    date: "",
+    startDate: "",
+    endDate: "",
     venue: "",
     category: "",
     semesters: [],
@@ -113,8 +114,13 @@ const EventForm = ({ onEventPublished }) => {
         createdBy: user.uid,
         initialViews: 0,
         initialRegistrations: 0,
-        date: new Date(formData.date),
+        startDate: new Date(formData.startDate),
+        endDate: new Date(formData.endDate),
       };
+
+      if (new Date(formData.startDate) >= new Date(formData.endDate)) {
+        throw new Error("End Date must be after Start Date");
+      }
 
       await addDoc(collection(db, "events"), eventPayload);
 
@@ -122,7 +128,8 @@ const EventForm = ({ onEventPublished }) => {
       setFormData({
         title: "",
         description: "",
-        date: "",
+        startDate: "",
+        endDate: "",
         venue: "",
         category: "",
         semesters: [],
@@ -187,20 +194,35 @@ const EventForm = ({ onEventPublished }) => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <label className="text-sm font-medium text-gray-300 flex items-center gap-2">
-                      <Calendar className="w-4 h-4 text-amber-400" /> Date &
-                      Time
+                      <Calendar className="w-4 h-4 text-amber-400" /> Start Date
+                      & Time
                     </label>
                     <input
                       type="datetime-local"
-                      name="date"
+                      name="startDate"
                       required
-                      value={formData.date}
+                      value={formData.startDate}
                       onChange={handleInputChange}
                       className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
                     />
                   </div>
 
                   <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-300 flex items-center gap-2">
+                      <Calendar className="w-4 h-4 text-amber-400" /> End Date &
+                      Time
+                    </label>
+                    <input
+                      type="datetime-local"
+                      name="endDate"
+                      required
+                      value={formData.endDate}
+                      onChange={handleInputChange}
+                      className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
+                    />
+                  </div>
+
+                  <div className="space-y-2 md:col-span-2">
                     <label className="text-sm font-medium text-gray-300 flex items-center gap-2">
                       <MapPin className="w-4 h-4 text-amber-400" /> Venue
                     </label>
