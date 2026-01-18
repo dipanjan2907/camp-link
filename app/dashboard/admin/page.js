@@ -14,12 +14,21 @@ import Logout from "../../logout";
 import { useRouter } from "next/navigation";
 import EventForm from "@/app/components/EventForm";
 import VolunteerApprovalCard from "@/app/components/VolunteerApprovalCard";
-import { User, Loader2, Trash2, UserPlus, Megaphone } from "lucide-react"; // Added UserPlus, Megaphone
+import EventRegistrationModal from "@/app/components/EventRegistrationModal";
+import {
+  User,
+  Loader2,
+  Trash2,
+  UserPlus,
+  Megaphone,
+  Users,
+} from "lucide-react"; // Added Users
 
 const Page = () => {
   const [userDetails, setUserDetails] = useState(null);
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [viewingEventId, setViewingEventId] = useState(null);
   const router = useRouter();
 
   // 1. Events Listener (Real-time)
@@ -277,6 +286,14 @@ const Page = () => {
                       >
                         <Trash2 className="w-5 h-5" />
                       </button>
+
+                      <button
+                        onClick={() => setViewingEventId(event.id)}
+                        className="absolute top-4 right-14 text-gray-400 hover:text-amber-500 hover:bg-amber-500/10 p-2 rounded-lg transition-all duration-200 opacity-0 group-hover:opacity-100 z-20"
+                        title="View Registrations"
+                      >
+                        <Users className="w-5 h-5" />
+                      </button>
                     </div>
                     <VolunteerApprovalCard
                       eventId={event.id}
@@ -289,6 +306,13 @@ const Page = () => {
           )}
         </div>
       </div>
+
+      {viewingEventId && (
+        <EventRegistrationModal
+          eventId={viewingEventId}
+          onClose={() => setViewingEventId(null)}
+        />
+      )}
     </div>
   );
 };

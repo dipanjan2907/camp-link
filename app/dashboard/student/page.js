@@ -217,6 +217,7 @@ const StudentDashboard = () => {
         userName:
           userData?.name || userData?.fname || user.displayName || "Student",
         email: user.email,
+        branch: userData?.branch || "Unknown Branch",
         eventTitle: event.title,
         registeredAt: serverTimestamp(),
       });
